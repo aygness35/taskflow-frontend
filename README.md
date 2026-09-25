@@ -1,6 +1,6 @@
 # TaskFlow Frontend
 
-A separate React + TypeScript interface for the existing TaskFlow NestJS API. It does not modify or duplicate the backend. The UI is Turkish; source code identifiers are English.
+React and TypeScript web interface for TaskFlow. Connects to the NestJS API and provides workspace, project, task, and comment management in Turkish.
 
 ## Run locally
 
@@ -13,7 +13,7 @@ npm run start:dev
 Then, in this directory:
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
@@ -44,7 +44,7 @@ The demo button only fills the login form. Submit it to sign in with `alice@exam
 
 ## Session behavior
 
-Tokens are stored in `sessionStorage` (per tab) and removed when logout succeeds or the server rejects a session. Concurrent requests share one refresh request; a failed network call preserves the session for retry. Server-side role checks remain authoritative. JavaScript-readable tokens are suitable for this local case demonstration; a deployed application should consider a same-origin backend-for-frontend and secure HttpOnly cookies, which would require backend changes.
+Tokens are stored in `sessionStorage` (per tab) and removed when logout succeeds or the server rejects a session. Concurrent requests share one refresh request; a failed network call preserves the session for retry. Server-side role checks remain authoritative. Tokens are accessible to JavaScript. Production deployment should consider secure HttpOnly cookies through a same-origin backend, which requires changes to the authentication API.
 
 Lists fetch all API pages in batches of 100 so boards, filters, and counts do not silently omit records. For very large datasets, replace this with incremental loading or server-side aggregates. Fonts use Google Fonts with system font fallbacks.
 
@@ -58,4 +58,4 @@ Lists fetch all API pages in batches of 100 so boards, filters, and counts do no
 - `src/components.tsx`: shared accessible dialog and UI elements.
 - `src/styles.css`: responsive visual styling.
 
-The original `Login` backend remains independently runnable and deliverable.
+The backend and frontend are separate repositories. Share both source repositories and follow their setup instructions. A GitHub link alone does not host a running application.

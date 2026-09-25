@@ -595,8 +595,8 @@ function Dashboard({
             <>
               <div className="page-heading">
                 <div>
-                  <span className="little-label">BİRLİKTE DAHA GÜÇLÜ</span>
-                  <h1>Ekibinle tanış.</h1>
+                  <span className="little-label">ÇALIŞMA ALANI ÜYELERİ</span>
+                  <h1>Ekip üyeleri</h1>
                   <p>Ortak hedefler, farklı yetenekler. Aynı çalışma alanı.</p>
                 </div>
                 {canManage && (
@@ -722,7 +722,7 @@ function Dashboard({
           ) : !project ? (
             <Empty
               icon={<FolderKanban size={32} />}
-              title="İlk proje, ilk adım."
+              title="Henüz proje yok."
               description={
                 canManage
                   ? 'Bir proje oluştur ve yapılacak işleri bir araya getir.'
@@ -1073,7 +1073,7 @@ function Dashboard({
                     <Empty
                       icon={<List size={24} />}
                       title="Henüz görev yok."
-                      description="İlk görevi ekleyerek projenin akışını başlat."
+                      description="Bu projeye bir görev ekle."
                       action={
                         <button
                           className="button"

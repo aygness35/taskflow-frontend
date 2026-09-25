@@ -56,23 +56,23 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
       <section className="auth-story">
         <Brand />
         <div className="story-content">
-          <span className="eyebrow">DAHA AZ KARMAŞA. DAHA ÇOK İLERLEME.</span>
+          <span className="eyebrow">PROJE VE GÖREV TAKİBİ</span>
           <h1>
-            Büyük fikirler.
+            Projeleri planla.
             <br />
-            Küçük adımlar.
+            Görevleri paylaş.
             <br />
-            <span>Birlikte başaralım.</span>
+            <span>İlerlemeyi takip et.</span>
           </h1>
           <p>
-            Ekibin, projelerin ve bir sonraki adımın.
+            Kimin ne üzerinde çalıştığını gör.
             <br />
-            Hepsi aynı yerde, aynı akışta.
+            Görevleri, tarihleri ve yorumları tek yerden takip et.
           </p>
           <div className="story-board" aria-hidden="true">
             <div className="story-board-top">
               <span>
-                <Layers size={16} /> Bir fikrin yolculuğu
+                <Layers size={16} /> Örnek proje
               </span>
               <span>•••</span>
             </div>
@@ -81,14 +81,14 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
                 <Check size={16} />
               </span>
               <div>
-                Harika bir fikir bul<small>Her şey bir fikirle başlar</small>
+                Proje kapsamını belirle<small>Gereksinimler ve teslim tarihi</small>
               </div>
               <span className="story-pill">Tamamlandı</span>
             </div>
             <div className="story-task">
               <span className="story-progress" />
               <div>
-                Birlikte hayata geçir<small>Bir sonraki adım senin</small>
+                İlk sürümü hazırla<small>Geliştirme ve kontrol</small>
               </div>
               <span className="story-pill warm">Devam ediyor</span>
             </div>
@@ -96,13 +96,13 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
               <span />
             </div>
             <footer>
-              <span>Her adım, ileriye.</span>
+              <span>2 görev</span>
               <ArrowRight size={17} />
             </footer>
           </div>
         </div>
         <div className="auth-story-footer">
-          <span>İşine odaklan. Akışı bize bırak.</span>
+          <span>TaskFlow · Proje yönetimi</span>
           <span>© {new Date().getFullYear()} TaskFlow</span>
         </div>
       </section>
@@ -122,12 +122,12 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
           </button>
         </div>
         <div className="auth-form-wrap">
-          <span className="little-label">HADİ BAŞLAYALIM</span>
-          <h2>{register ? 'Birlikte daha fazlası.' : 'Tekrar hoş geldin.'}</h2>
+          <span className="little-label">TASKFLOW</span>
+          <h2>{register ? 'Yeni hesap' : 'Hesabına giriş yap'}</h2>
           <p>
             {register
               ? 'Hesabını oluştur, ilk çalışma alanını kur.'
-              : 'Kaldığın yerden devam etmeye hazır mısın?'}
+              : 'Projelerine ulaşmak için giriş yap.'}
           </p>
           <form onSubmit={submit}>
             {register && (
@@ -211,7 +211,7 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
             <span>Çalışma alanın, yalnızca ekibine açık.</span>
           </div>
         </div>
-        <div className="auth-bottom">Bir sonraki güzel iş, burada başlar.</div>
+        <div className="auth-bottom">Projeler · Görevler · Ekip</div>
       </section>
     </div>
   );
