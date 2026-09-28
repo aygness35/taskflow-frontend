@@ -1,29 +1,36 @@
-export type Role = 'OWNER' | 'ADMIN' | 'MEMBER';
-export type Status = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';
-export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type Role = "OWNER" | "ADMIN" | "MEMBER";
+export type Status = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
 export interface User {
   id: string;
   name: string;
   email: string;
 }
+
 export interface Workspace {
   id: string;
   name: string;
   ownerId: string;
+  updatedAt: string;
 }
+
 export interface Member {
   id: string;
   userId: string;
   role: Role;
   user: User;
 }
+
 export interface Project {
   id: string;
   workspaceId: string;
   name: string;
   description: string | null;
-  status: 'ACTIVE' | 'ARCHIVED';
+  status: "ACTIVE" | "ARCHIVED";
+  updatedAt: string;
 }
+
 export interface Task {
   id: string;
   projectId: string;
@@ -37,6 +44,7 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
 export interface Comment {
   id: string;
   authorId: string;
@@ -44,41 +52,57 @@ export interface Comment {
   createdAt: string;
   updatedAt: string;
 }
+
 export interface Page<T> {
   data: T[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
-export const statuses: { value: Status; label: string; color: string }[] = [
-  { value: 'TODO', label: 'Yapılacak', color: '#93948f' },
-  { value: 'IN_PROGRESS', label: 'Devam ediyor', color: '#d38946' },
-  { value: 'IN_REVIEW', label: 'İncelemede', color: '#8f7db1' },
-  { value: 'DONE', label: 'Tamamlandı', color: '#648972' },
+
+export const statuses: {
+  value: Status;
+  label: string;
+  color: string;
+}[] = [
+  { value: "TODO", label: "Yapılacak", color: "#93948f" },
+  { value: "IN_PROGRESS", label: "Devam ediyor", color: "#d38946" },
+  { value: "IN_REVIEW", label: "İncelemede", color: "#8f7db1" },
+  { value: "DONE", label: "Tamamlandı", color: "#648972" },
 ];
+
 export const priorities: Record<Priority, string> = {
-  LOW: 'Düşük',
-  MEDIUM: 'Orta',
-  HIGH: 'Yüksek',
-  URGENT: 'Acil',
+  LOW: "Düşük",
+  MEDIUM: "Orta",
+  HIGH: "Yüksek",
+  URGENT: "Acil",
 };
+
 export const roles: Record<Role, string> = {
-  OWNER: 'Sahip',
-  ADMIN: 'Yönetici',
-  MEMBER: 'Üye',
+  OWNER: "Sahip",
+  ADMIN: "Yönetici",
+  MEMBER: "Üye",
 };
+
 export const initials = (name: string) =>
   name
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((n) => n[0])
-    .join('')
-    .toLocaleUpperCase('tr');
+    .join("")
+    .toLocaleUpperCase("tr");
+
 export const dateLabel = (value: string) =>
-  new Date(value).toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'short',
+  new Date(value).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "short",
   });
+
 export const inputDate = (value: string | Date) => {
   const d = new Date(value);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };

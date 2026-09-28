@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowDownWideNarrow,
   ArrowRight,
@@ -23,9 +23,9 @@ import {
   Sparkles,
   Users,
   X,
-} from 'lucide-react';
-import { api, getAll, hasSession, logout } from './api';
-import { Auth } from './Auth';
+} from "lucide-react";
+import { api, getAll, hasSession, logout } from "./api";
+import { Auth } from "./Auth";
 import {
   Avatar,
   Brand,
@@ -34,10 +34,10 @@ import {
   Modal,
   SaveButton,
   Spinner,
-} from './components';
-import { EntityForm } from './Forms';
-import type { FormKind } from './Forms';
-import { TaskDialog } from './TaskDialog';
+} from "./components";
+import { EntityForm } from "./Forms";
+import type { FormKind } from "./Forms";
+import { TaskDialog } from "./TaskDialog";
 import type {
   Member,
   Priority,
@@ -47,22 +47,22 @@ import type {
   Task,
   User,
   Workspace,
-} from './types';
-import { dateLabel, priorities, roles, statuses } from './types';
+} from "./types";
+import { dateLabel, priorities, roles, statuses } from "./types";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(hasSession());
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     const onExpired = () => {
       setUser(null);
       setLoading(false);
-      setError('');
+      setError("");
     };
-    window.addEventListener('session-expired', onExpired);
-    return () => window.removeEventListener('session-expired', onExpired);
+    window.addEventListener("session-expired", onExpired);
+    return () => window.removeEventListener("session-expired", onExpired);
   }, []);
   useEffect(() => {
     if (!hasSession()) {
@@ -71,11 +71,11 @@ export function App() {
     }
     const controller = new AbortController();
     setLoading(true);
-    setError('');
-    api<User>('/auth/me', { signal: controller.signal })
+    setError("");
+    api<User>("/auth/me", { signal: controller.signal })
       .then(setUser)
       .catch((e) => {
-        if (e.name !== 'AbortError' && e.status !== 401) setError(e.message);
+        if (e.name !== "AbortError" && e.status !== 401) setError(e.message);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -113,26 +113,26 @@ function Dashboard({
   onLogout: () => void;
 }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [workspaceId, setWorkspaceId] = useState('');
+  const [workspaceId, setWorkspaceId] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [view, setView] = useState<'board' | 'members' | 'settings'>('board');
-  const [layout, setLayout] = useState<'board' | 'list'>('board');
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [priority, setPriority] = useState('');
-  const [status, setStatus] = useState('');
+  const [view, setView] = useState<"board" | "members" | "settings">("board");
+  const [layout, setLayout] = useState<"board" | "list">("board");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [priority, setPriority] = useState("");
+  const [status, setStatus] = useState("");
   const [mine, setMine] = useState(false);
-  const [sort, setSort] = useState('createdAt');
+  const [sort, setSort] = useState("createdAt");
   const [filters, setFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [scopeLoading, setScopeLoading] = useState(false);
   const [tasksLoading, setTasksLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [scopeError, setScopeError] = useState('');
-  const [taskError, setTaskError] = useState('');
+  const [error, setError] = useState("");
+  const [scopeError, setScopeError] = useState("");
+  const [taskError, setTaskError] = useState("");
   const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [scopeVersion, setScopeVersion] = useState(0);
   const [taskVersion, setTaskVersion] = useState(0);
@@ -143,10 +143,10 @@ function Dashboard({
     task?: Task;
     status?: Status;
   } | null>(null);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
-  const [actionError, setActionError] = useState('');
+  const [actionError, setActionError] = useState("");
   const [confirm, setConfirm] = useState<{
     title: string;
     message: string;
@@ -156,12 +156,12 @@ function Dashboard({
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const project = projects.find((p) => p.id === projectId);
   const membership = members.find((m) => m.userId === user.id);
-  const role: Role = membership?.role || 'MEMBER';
-  const canManage = role !== 'MEMBER';
+  const role: Role = membership?.role || "MEMBER";
+  const canManage = role !== "MEMBER";
   const notice = useCallback((message: string) => setToast(message), []);
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(''), 4000);
+    const timer = setTimeout(() => setToast(""), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
@@ -171,16 +171,16 @@ function Dashboard({
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
-    setError('');
-    api<Workspace[]>('/workspaces', { signal: controller.signal })
+    setError("");
+    api<Workspace[]>("/workspaces", { signal: controller.signal })
       .then((data) => {
         setWorkspaces(data);
         setWorkspaceId((id) =>
-          data.some((w) => w.id === id) ? id : data[0]?.id || '',
+          data.some((w) => w.id === id) ? id : data[0]?.id || "",
         );
       })
       .catch((e) => {
-        if (e.name !== 'AbortError') setError(e.message);
+        if (e.name !== "AbortError") setError(e.message);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -191,9 +191,9 @@ function Dashboard({
     setProjects([]);
     setMembers([]);
     setTasks([]);
-    setScopeError('');
+    setScopeError("");
     if (!workspaceId) {
-      setProjectId('');
+      setProjectId("");
       return;
     }
     const controller = new AbortController();
@@ -210,13 +210,13 @@ function Dashboard({
         setProjectId((id) =>
           p.some((item) => item.id === id)
             ? id
-            : p.find((item) => item.status === 'ACTIVE')?.id || p[0]?.id || '',
+            : p.find((item) => item.status === "ACTIVE")?.id || p[0]?.id || "",
         );
       })
       .catch((e) => {
-        if (e.name !== 'AbortError') {
+        if (e.name !== "AbortError") {
           setScopeError(e.message);
-          setProjectId('');
+          setProjectId("");
         }
       })
       .finally(() => {
@@ -226,22 +226,22 @@ function Dashboard({
   }, [workspaceId, scopeVersion]);
   useEffect(() => {
     setTasks([]);
-    setTaskError('');
+    setTaskError("");
     if (!projectId || scopeLoading) return;
     const controller = new AbortController();
     setTasksLoading(true);
     const query = new URLSearchParams({
       sortBy: sort,
-      sortOrder: sort === 'createdAt' ? 'desc' : 'asc',
+      sortOrder: sort === "createdAt" ? "desc" : "asc",
     });
-    if (debouncedSearch.trim()) query.set('search', debouncedSearch.trim());
-    if (priority) query.set('priority', priority);
-    if (status) query.set('status', status);
-    if (mine) query.set('assigneeId', user.id);
+    if (debouncedSearch.trim()) query.set("search", debouncedSearch.trim());
+    if (priority) query.set("priority", priority);
+    if (status) query.set("status", status);
+    if (mine) query.set("assigneeId", user.id);
     getAll<Task>(`/projects/${projectId}/tasks?${query}`, controller.signal)
       .then(setTasks)
       .catch((e) => {
-        if (e.name !== 'AbortError') setTaskError(e.message);
+        if (e.name !== "AbortError") setTaskError(e.message);
       })
       .finally(() => {
         if (!controller.signal.aborted) setTasksLoading(false);
@@ -260,32 +260,32 @@ function Dashboard({
   ]);
   function chooseWorkspace(id: string) {
     setWorkspaceId(id);
-    setProjectId('');
+    setProjectId("");
     setTasks([]);
     setTaskDialog(null);
-    setView('board');
+    setView("board");
     setMobileOpen(false);
     resetFilters();
   }
   function chooseProject(id: string) {
     setProjectId(id);
     setTaskDialog(null);
-    setView('board');
+    setView("board");
     setMobileOpen(false);
     resetFilters();
   }
   function resetFilters() {
-    setSearch('');
-    setDebouncedSearch('');
-    setPriority('');
-    setStatus('');
+    setSearch("");
+    setDebouncedSearch("");
+    setPriority("");
+    setStatus("");
     setMine(false);
   }
   const filtered = !!(search || priority || status || mine);
-  const done = tasks.filter((t) => t.status === 'DONE').length;
+  const done = tasks.filter((t) => t.status === "DONE").length;
   async function signOut() {
     setLogoutBusy(true);
-    setActionError('');
+    setActionError("");
     try {
       await logout();
       onLogout();
@@ -296,31 +296,31 @@ function Dashboard({
     }
   }
   function savedEntity(result: Workspace | Project | User) {
-    if (form?.kind === 'workspace') {
+    if (form?.kind === "workspace") {
       setWorkspaces((items) => [...items, result as Workspace]);
       chooseWorkspace(result.id);
     }
-    if (form?.kind === 'project') {
+    if (form?.kind === "project") {
       setProjectId(result.id);
       setScopeVersion((n) => n + 1);
-      setView('board');
+      setView("board");
     }
-    if (form?.kind === 'member') setScopeVersion((n) => n + 1);
-    if (form?.kind === 'profile') {
+    if (form?.kind === "member") setScopeVersion((n) => n + 1);
+    if (form?.kind === "profile") {
       onUser(result as User);
       setScopeVersion((n) => n + 1);
     }
-    notice('Değişiklikler kaydedildi.');
+    notice("Değişiklikler kaydedildi.");
   }
   async function changeRole(member: Member, newRole: string) {
-    setActionError('');
+    setActionError("");
     try {
       await api(`/workspaces/${workspaceId}/members/${member.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: { role: newRole },
       });
       setScopeVersion((n) => n + 1);
-      notice('Üye rolü güncellendi.');
+      notice("Üye rolü güncellendi.");
     } catch (e) {
       setActionError((e as Error).message);
     }
@@ -328,30 +328,35 @@ function Dashboard({
   function removeMember(member: Member) {
     setConfirm({
       title:
-        member.userId === user.id ? 'Çalışma alanından ayrıl' : 'Üyeyi çıkar',
+        member.userId === user.id ? "Çalışma alanından ayrıl" : "Üyeyi çıkar",
       message: `${member.user.name} bu alanın proje ve görevlerine erişimini kaybedecek. Mevcut görev atamaları kaldırılacak.`,
       action: async () => {
         await api(`/workspaces/${workspaceId}/members/${member.id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
         if (member.userId === user.id) {
-          setWorkspaceId('');
+          setWorkspaceId("");
           setWorkspaceVersion((n) => n + 1);
         } else setScopeVersion((n) => n + 1);
-        notice('Üyelik güncellendi.');
+        notice("Üyelik güncellendi.");
       },
     });
   }
   function deleteProject() {
     if (!project) return;
     setConfirm({
-      title: 'Projeyi sil',
+      title: "Projeyi sil",
       message: `“${project.name}” ve içindeki tüm görevler ve yorumlar kalıcı olarak silinecek.`,
       action: async () => {
-        await api(`/projects/${project.id}`, { method: 'DELETE' });
-        setProjectId('');
+        await api(
+          `/projects/${project.id}?expectedUpdatedAt=${encodeURIComponent(
+            project.updatedAt,
+          )}`,
+          { method: "DELETE" },
+        );
+        setProjectId("");
         setScopeVersion((n) => n + 1);
-        notice('Proje silindi.');
+        notice("Proje silindi.");
       },
     });
   }
@@ -364,11 +369,11 @@ function Dashboard({
           aria-label="Menüyü kapat"
         />
       )}
-      <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
+      <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
         <Brand />
         <div className="workspace-switch">
           <span className="workspace-emblem">
-            {workspace?.name[0]?.toLocaleUpperCase('tr') || 'T'}
+            {workspace?.name[0]?.toLocaleUpperCase("tr") || "T"}
           </span>
           <label>
             <span>ÇALIŞMA ALANI</span>
@@ -389,37 +394,37 @@ function Dashboard({
         </div>
         <button
           className="sidebar-new"
-          onClick={() => setForm({ kind: 'workspace' })}
+          onClick={() => setForm({ kind: "workspace" })}
         >
           <Plus size={14} /> Yeni çalışma alanı
         </button>
         <div className="nav-label">ÇALIŞMA ALANIN</div>
         <nav>
           <button
-            className={view === 'board' ? 'active' : ''}
+            className={view === "board" ? "active" : ""}
             onClick={() => {
-              setView('board');
+              setView("board");
               setMobileOpen(false);
             }}
           >
             <LayoutGrid size={17} /> Görev panosu <ChevronRight size={14} />
           </button>
           <button
-            className={view === 'members' ? 'active' : ''}
+            className={view === "members" ? "active" : ""}
             disabled={!workspace}
             onClick={() => {
-              setView('members');
+              setView("members");
               setMobileOpen(false);
             }}
           >
-            <Users size={17} /> Ekip üyeleri{' '}
-            <span className="nav-count">{members.length || '—'}</span>
+            <Users size={17} /> Ekip üyeleri{" "}
+            <span className="nav-count">{members.length || "—"}</span>
           </button>
           <button
-            className={view === 'settings' ? 'active' : ''}
+            className={view === "settings" ? "active" : ""}
             disabled={!workspace}
             onClick={() => {
-              setView('settings');
+              setView("settings");
               setMobileOpen(false);
             }}
           >
@@ -427,12 +432,12 @@ function Dashboard({
           </button>
         </nav>
         <div className="nav-label projects-label">
-          PROJELER{' '}
+          PROJELER{" "}
           {canManage && workspace && (
             <button
               className="icon-button"
               aria-label="Yeni proje"
-              onClick={() => setForm({ kind: 'project' })}
+              onClick={() => setForm({ kind: "project" })}
             >
               <Plus size={16} />
             </button>
@@ -443,13 +448,13 @@ function Dashboard({
             <button
               key={p.id}
               className={
-                p.id === projectId && view === 'board' ? 'selected' : ''
+                p.id === projectId && view === "board" ? "selected" : ""
               }
               onClick={() => chooseProject(p.id)}
             >
               <span className={`project-dot dot-${i % 4}`} />
               <span>{p.name}</span>
-              {p.status === 'ARCHIVED' && (
+              {p.status === "ARCHIVED" && (
                 <span className="archived-mark">arşiv</span>
               )}
             </button>
@@ -476,13 +481,13 @@ function Dashboard({
           </div>
           <div className="profile-row">
             <button
-              onClick={() => setForm({ kind: 'profile' })}
+              onClick={() => setForm({ kind: "profile" })}
               className="profile-button"
             >
               <Avatar name={user.name} />
               <span>
                 <strong>{user.name}</strong>
-                <small>{membership ? roles[role] : 'Hesabım'}</small>
+                <small>{membership ? roles[role] : "Hesabım"}</small>
               </span>
             </button>
             <button
@@ -507,22 +512,22 @@ function Dashboard({
             >
               <Menu size={20} />
             </button>
-            <span>{workspace?.name || 'Çalışma alanın'}</span>
+            <span>{workspace?.name || "Çalışma alanın"}</span>
             <ChevronRight size={13} />
             <strong>
-              {view === 'members'
-                ? 'Ekip üyeleri'
-                : view === 'settings'
-                  ? 'Alan ayarları'
-                  : project?.name || 'Projeler'}
+              {view === "members"
+                ? "Ekip üyeleri"
+                : view === "settings"
+                  ? "Alan ayarları"
+                  : project?.name || "Projeler"}
             </strong>
           </div>
           <div className="topbar-right">
             <span className="today">
               <CalendarDays size={14} />
-              {new Date().toLocaleDateString('tr-TR', {
-                day: 'numeric',
-                month: 'long',
+              {new Date().toLocaleDateString("tr-TR", {
+                day: "numeric",
+                month: "long",
               })}
             </span>
             <span className="topbar-separator" />
@@ -536,7 +541,7 @@ function Dashboard({
               <button
                 className="icon-button"
                 aria-label="Hata mesajını kapat"
-                onClick={() => setActionError('')}
+                onClick={() => setActionError("")}
               >
                 <X size={15} />
               </button>
@@ -552,7 +557,7 @@ function Dashboard({
           ) : !workspace ? (
             <div className="welcome-empty">
               <span className="little-label">
-                MERHABA, {user.name.split(' ')[0].toLocaleUpperCase('tr')}
+                MERHABA, {user.name.split(" ")[0].toLocaleUpperCase("tr")}
               </span>
               <h1>
                 Her güzel iş,
@@ -566,7 +571,7 @@ function Dashboard({
               </p>
               <button
                 className="button primary"
-                onClick={() => setForm({ kind: 'workspace' })}
+                onClick={() => setForm({ kind: "workspace" })}
               >
                 <Plus size={17} /> Çalışma alanı oluştur
               </button>
@@ -591,7 +596,7 @@ function Dashboard({
               message={scopeError}
               retry={() => setScopeVersion((n) => n + 1)}
             />
-          ) : view === 'members' ? (
+          ) : view === "members" ? (
             <>
               <div className="page-heading">
                 <div>
@@ -602,7 +607,7 @@ function Dashboard({
                 {canManage && (
                   <button
                     className="button primary"
-                    onClick={() => setForm({ kind: 'member' })}
+                    onClick={() => setForm({ kind: "member" })}
                   >
                     <Plus size={17} /> Üye ekle
                   </button>
@@ -620,14 +625,14 @@ function Dashboard({
                       <Avatar name={member.user.name} />
                       <span>
                         <strong>
-                          {member.user.name}{' '}
+                          {member.user.name}{" "}
                           {member.userId === user.id && <small>(sen)</small>}
                         </strong>
                         <small>{member.user.email}</small>
                       </span>
                     </div>
                     <div>
-                      {role === 'OWNER' && member.role !== 'OWNER' ? (
+                      {role === "OWNER" && member.role !== "OWNER" ? (
                         <select
                           aria-label={`${member.user.name} rolü`}
                           value={member.role}
@@ -645,15 +650,15 @@ function Dashboard({
                       )}
                     </div>
                     <div className="member-action">
-                      {member.role !== 'OWNER' &&
+                      {member.role !== "OWNER" &&
                         (member.userId === user.id ||
-                          role === 'OWNER' ||
-                          (role === 'ADMIN' && member.role === 'MEMBER')) && (
+                          role === "OWNER" ||
+                          (role === "ADMIN" && member.role === "MEMBER")) && (
                           <button
                             className="text-button danger-text"
                             onClick={() => removeMember(member)}
                           >
-                            {member.userId === user.id ? 'Ayrıl' : 'Çıkar'}
+                            {member.userId === user.id ? "Ayrıl" : "Çıkar"}
                           </button>
                         )}
                     </div>
@@ -665,7 +670,7 @@ function Dashboard({
                 görüntülenebilir.
               </p>
             </>
-          ) : view === 'settings' ? (
+          ) : view === "settings" ? (
             <>
               <div className="page-heading">
                 <div>
@@ -684,10 +689,10 @@ function Dashboard({
                   setWorkspaces((all) =>
                     all.map((item) => (item.id === w.id ? w : item)),
                   );
-                  notice('Çalışma alanı güncellendi.');
+                  notice("Çalışma alanı güncellendi.");
                 }}
               />
-              {role === 'OWNER' && (
+              {role === "OWNER" && (
                 <div className="danger-section">
                   <div>
                     <h3>Çalışma alanını sil</h3>
@@ -700,16 +705,19 @@ function Dashboard({
                     className="button danger-outline"
                     onClick={() =>
                       setConfirm({
-                        title: 'Çalışma alanını sil',
+                        title: "Çalışma alanını sil",
                         message: `“${workspace.name}” ve içindeki tüm veriler kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
                         action: async () => {
-                          await api(`/workspaces/${workspace.id}`, {
-                            method: 'DELETE',
-                          });
-                          setWorkspaceId('');
+                          await api(
+                            `/workspaces/${workspace.id}?expectedUpdatedAt=${encodeURIComponent(
+                              workspace.updatedAt,
+                            )}`,
+                            { method: "DELETE" },
+                          );
+                          setWorkspaceId("");
                           setWorkspaceVersion((n) => n + 1);
-                          setView('board');
-                          notice('Çalışma alanı silindi.');
+                          setView("board");
+                          notice("Çalışma alanı silindi.");
                         },
                       })
                     }
@@ -725,14 +733,14 @@ function Dashboard({
               title="Henüz proje yok."
               description={
                 canManage
-                  ? 'Bir proje oluştur ve yapılacak işleri bir araya getir.'
-                  : 'Yöneticin bir proje oluşturduğunda burada göreceksin.'
+                  ? "Bir proje oluştur ve yapılacak işleri bir araya getir."
+                  : "Yöneticin bir proje oluşturduğunda burada göreceksin."
               }
               action={
                 canManage && (
                   <button
                     className="button primary"
-                    onClick={() => setForm({ kind: 'project' })}
+                    onClick={() => setForm({ kind: "project" })}
                   >
                     <Plus size={16} /> Proje oluştur
                   </button>
@@ -746,12 +754,12 @@ function Dashboard({
                   <div className="project-kicker">
                     <span className="little-label">PROJE ÇALIŞMA ALANI</span>
                     <span
-                      className={`project-status ${project.status === 'ARCHIVED' ? 'is-archived' : ''}`}
+                      className={`project-status ${project.status === "ARCHIVED" ? "is-archived" : ""}`}
                     >
                       <span />
-                      {project.status === 'ACTIVE'
-                        ? 'Aktif proje'
-                        : 'Arşivlenmiş'}
+                      {project.status === "ACTIVE"
+                        ? "Aktif proje"
+                        : "Arşivlenmiş"}
                     </span>
                   </div>
                   <h1>
@@ -760,7 +768,7 @@ function Dashboard({
                   </h1>
                   <p>
                     {project.description ||
-                      'Büyük resmi gör. Bir sonraki adıma odaklan.'}
+                      "Büyük resmi gör. Bir sonraki adıma odaklan."}
                   </p>
                 </div>
                 <div className="heading-actions">
@@ -775,7 +783,7 @@ function Dashboard({
                       <div>
                         <button
                           onClick={() =>
-                            setForm({ kind: 'project', edit: true })
+                            setForm({ kind: "project", edit: true })
                           }
                         >
                           Projeyi düzenle
@@ -803,8 +811,8 @@ function Dashboard({
                     <strong>Her adım bir ilerleme.</strong>
                     <p>
                       {filtered
-                        ? 'Seçili filtrelere göre görev özeti.'
-                        : 'Projenin bugünkü fotoğrafı.'}
+                        ? "Seçili filtrelere göre görev özeti."
+                        : "Projenin bugünkü fotoğrafı."}
                     </p>
                   </div>
                 </div>
@@ -812,26 +820,26 @@ function Dashboard({
                   <span>Toplam görev</span>
                   <strong>
                     {tasksLoading
-                      ? '—'
-                      : tasks.length.toString().padStart(2, '0')}
+                      ? "—"
+                      : tasks.length.toString().padStart(2, "0")}
                   </strong>
                 </div>
                 <div className="metric">
                   <span>Devam ediyor</span>
                   <strong>
                     {tasksLoading
-                      ? '—'
+                      ? "—"
                       : tasks
-                          .filter((t) => t.status === 'IN_PROGRESS')
+                          .filter((t) => t.status === "IN_PROGRESS")
                           .length.toString()
-                          .padStart(2, '0')}
+                          .padStart(2, "0")}
                     <span className="metric-dot" />
                   </strong>
                 </div>
                 <div className="metric progress-metric">
                   <span>Tamamlanan</span>
                   <strong>
-                    {tasksLoading ? '—' : done.toString().padStart(2, '0')}
+                    {tasksLoading ? "—" : done.toString().padStart(2, "0")}
                     <span className="progress-track">
                       <span
                         style={{
@@ -851,14 +859,14 @@ function Dashboard({
               <div className="board-tabs">
                 <div>
                   <button
-                    className={layout === 'board' ? 'selected' : ''}
-                    onClick={() => setLayout('board')}
+                    className={layout === "board" ? "selected" : ""}
+                    onClick={() => setLayout("board")}
                   >
                     <LayoutGrid size={16} /> Pano görünümü
                   </button>
                   <button
-                    className={layout === 'list' ? 'selected' : ''}
-                    onClick={() => setLayout('list')}
+                    className={layout === "list" ? "selected" : ""}
+                    onClick={() => setLayout("list")}
                   >
                     <List size={17} /> Liste
                   </button>
@@ -871,7 +879,7 @@ function Dashboard({
                   </div>
                   <button
                     className="text-button"
-                    onClick={() => setView('members')}
+                    onClick={() => setView("members")}
                   >
                     {members.length} ekip üyesi <ArrowUpRight size={14} />
                   </button>
@@ -891,7 +899,7 @@ function Dashboard({
                     <button
                       className="icon-button"
                       aria-label="Aramayı temizle"
-                      onClick={() => setSearch('')}
+                      onClick={() => setSearch("")}
                     >
                       <X size={14} />
                     </button>
@@ -899,13 +907,13 @@ function Dashboard({
                 </div>
                 <div className="toolbar-right">
                   <button
-                    className={`button filter-button ${mine ? 'is-on' : ''}`}
+                    className={`button filter-button ${mine ? "is-on" : ""}`}
                     onClick={() => setMine(!mine)}
                   >
                     <Circle size={14} /> Bana atananlar
                   </button>
                   <button
-                    className={`button filter-button ${filters || priority || status ? 'is-on' : ''}`}
+                    className={`button filter-button ${filters || priority || status ? "is-on" : ""}`}
                     onClick={() => setFilters(!filters)}
                   >
                     <SlidersHorizontal size={15} /> Filtrele
@@ -979,7 +987,7 @@ function Dashboard({
                     </button>
                   }
                 />
-              ) : layout === 'board' ? (
+              ) : layout === "board" ? (
                 <div className="kanban">
                   {statuses.map((s) => (
                     <section
@@ -1018,15 +1026,15 @@ function Dashboard({
                           ))}
                         {!tasks.some((t) => t.status === s.value) && (
                           <div className="column-empty">
-                            {s.value === 'DONE' ? (
+                            {s.value === "DONE" ? (
                               <CheckCheck size={23} />
                             ) : (
                               <CircleDashed size={23} />
                             )}
                             <p>
-                              {s.value === 'DONE'
-                                ? 'Güzel işler burada birikir.'
-                                : 'Bir sonraki adım için yer var.'}
+                              {s.value === "DONE"
+                                ? "Güzel işler burada birikir."
+                                : "Bir sonraki adım için yer var."}
                             </p>
                           </div>
                         )}
@@ -1064,9 +1072,9 @@ function Dashboard({
                       </span>
                       <span>
                         {members.find((m) => m.userId === t.assigneeId)?.user
-                          .name || 'Atanmadı'}
+                          .name || "Atanmadı"}
                       </span>
-                      <span>{t.dueDate ? dateLabel(t.dueDate) : '—'}</span>
+                      <span>{t.dueDate ? dateLabel(t.dueDate) : "—"}</span>
                     </button>
                   ))}
                   {!tasks.length && (
@@ -1092,7 +1100,7 @@ function Dashboard({
                   ileri.
                 </span>
                 <span>
-                  Görev detaylarını açmak için bir karta tıkla{' '}
+                  Görev detaylarını açmak için bir karta tıkla{" "}
                   <ArrowUpRight size={13} />
                 </span>
               </footer>
@@ -1122,7 +1130,7 @@ function Dashboard({
           onClose={() => setTaskDialog(null)}
           onSaved={() => {
             setTaskVersion((n) => n + 1);
-            notice('Görevler güncellendi.');
+            notice("Görevler güncellendi.");
           }}
         />
       )}
@@ -1132,7 +1140,7 @@ function Dashboard({
           onClose={() => {
             if (!confirmBusy) {
               setConfirm(null);
-              setActionError('');
+              setActionError("");
             }
           }}
         >
@@ -1145,7 +1153,7 @@ function Dashboard({
                 disabled={confirmBusy}
                 onClick={() => {
                   setConfirm(null);
-                  setActionError('');
+                  setActionError("");
                 }}
               >
                 Vazgeç
@@ -1155,7 +1163,7 @@ function Dashboard({
                 disabled={confirmBusy}
                 onClick={async () => {
                   setConfirmBusy(true);
-                  setActionError('');
+                  setActionError("");
                   try {
                     await confirm.action();
                     setConfirm(null);
@@ -1166,7 +1174,7 @@ function Dashboard({
                   }
                 }}
               >
-                {confirmBusy ? 'İşleniyor…' : 'Onayla'}
+                {confirmBusy ? "İşleniyor…" : "Onayla"}
               </button>
             </div>
           </div>
@@ -1181,7 +1189,7 @@ function Dashboard({
           <button
             className="icon-button"
             aria-label="Bildirimi kapat"
-            onClick={() => setToast('')}
+            onClick={() => setToast("")}
           >
             <X size={14} />
           </button>
@@ -1216,10 +1224,10 @@ function TaskCard({
   const overdue =
     !!task.dueDate &&
     new Date(task.dueDate) < new Date() &&
-    task.status !== 'DONE';
+    task.status !== "DONE";
   return (
     <button
-      className={`task-card ${task.status === 'DONE' ? 'task-done' : ''}`}
+      className={`task-card ${task.status === "DONE" ? "task-done" : ""}`}
       onClick={onClick}
     >
       <div className="task-card-top">
@@ -1229,9 +1237,9 @@ function TaskCard({
       <h3>{task.title}</h3>
       {task.description && <p>{task.description}</p>}
       <div className="task-card-bottom">
-        <span className={overdue ? 'overdue' : ''}>
+        <span className={overdue ? "overdue" : ""}>
           <CalendarDays size={12} />
-          {task.dueDate ? dateLabel(task.dueDate) : 'Tarih yok'}
+          {task.dueDate ? dateLabel(task.dueDate) : "Tarih yok"}
         </span>
         {assignee ? (
           <Avatar name={assignee.name} small />
@@ -1255,18 +1263,21 @@ function WorkspaceSettings({
 }) {
   const [name, setName] = useState(workspace.name);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   return (
     <form
       className="settings-card"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        setError('');
+        setError("");
         try {
           const result = await api<Workspace>(`/workspaces/${workspace.id}`, {
-            method: 'PATCH',
-            body: { name: name.trim() },
+            method: "PATCH",
+            body: {
+              name: name.trim(),
+              expectedUpdatedAt: workspace.updatedAt,
+            },
           });
           onUpdated(result);
         } catch (e) {

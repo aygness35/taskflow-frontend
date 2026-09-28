@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { api } from './api';
-import { ErrorBox, Modal, SaveButton } from './components';
-import type { Project, Role, User, Workspace } from './types';
-export type FormKind = 'workspace' | 'project' | 'member' | 'profile';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { api } from "./api";
+import { ErrorBox, Modal, SaveButton } from "./components";
+import type { Project, Role, User, Workspace } from "./types";
+
+export type FormKind = "workspace" | "project" | "member" | "profile";
+
 export function EntityForm({
   kind,
   workspace,
@@ -22,59 +24,69 @@ export function EntityForm({
   onSaved: (result: Workspace | Project | User) => void;
 }) {
   const [name, setName] = useState(
-    kind === 'profile'
+    kind === "profile"
       ? user.name
-      : kind === 'project'
-        ? project?.name || ''
-        : '',
+      : kind === "project"
+        ? project?.name || ""
+        : "",
   );
-  const [description, setDescription] = useState(project?.description || '');
-  const [status, setStatus] = useState(project?.status || 'ACTIVE');
-  const [email, setEmail] = useState('');
-  const [memberRole, setMemberRole] = useState('MEMBER');
+  const [description, setDescription] = useState(project?.description || "");
+  const [status, setStatus] = useState(project?.status || "ACTIVE");
+  const [email, setEmail] = useState("");
+  const [memberRole, setMemberRole] = useState("MEMBER");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
   const titles = {
-    workspace: 'Yeni çalışma alanı',
-    project: project ? 'Projeyi düzenle' : 'Yeni proje',
-    member: 'Ekibine birini ekle',
-    profile: 'Profilini düzenle',
+    workspace: "Yeni çalışma alanı",
+    project: project ? "Projeyi düzenle" : "Yeni proje",
+    member: "Ekibine birini ekle",
+    profile: "Profilini düzenle",
   };
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError('');
+    setError("");
+
     const request =
-      kind === 'workspace'
-        ? { path: '/workspaces', method: 'POST', body: { name: name.trim() } }
-        : kind === 'project'
+      kind === "workspace"
+        ? {
+            path: "/workspaces",
+            method: "POST",
+            body: { name: name.trim() },
+          }
+        : kind === "project"
           ? {
               path: project
                 ? `/projects/${project.id}`
                 : `/workspaces/${workspace!.id}/projects`,
-              method: project ? 'PATCH' : 'POST',
+              method: project ? "PATCH" : "POST",
               body: {
                 name: name.trim(),
                 description: description.trim() || null,
                 status,
+                ...(project ? { expectedUpdatedAt: project.updatedAt } : {}),
               },
             }
-          : kind === 'member'
+          : kind === "member"
             ? {
                 path: `/workspaces/${workspace!.id}/members`,
-                method: 'POST',
+                method: "POST",
                 body: { email, role: memberRole },
               }
             : {
-                path: '/users/me',
-                method: 'PATCH',
+                path: "/users/me",
+                method: "PATCH",
                 body: { name: name.trim() },
               };
+
     try {
       const result = await api<Workspace | Project | User>(
         request.path,
         request,
       );
+
       onSaved(result);
       onClose();
     } catch (e) {
@@ -83,14 +95,15 @@ export function EntityForm({
       setBusy(false);
     }
   }
+
   return (
     <Modal
       title={titles[kind]}
       subtitle={
-        kind === 'member'
-          ? 'Eklemek istediğin kişinin TaskFlow hesabı olmalı.'
-          : kind === 'workspace'
-            ? 'Ekibin ve fikirlerin için yeni bir yer.'
+        kind === "member"
+          ? "Eklemek istediğin kişinin TaskFlow hesabı olmalı."
+          : kind === "workspace"
+            ? "Ekibin ve fikirlerin için yeni bir yer."
             : undefined
       }
       onClose={() => {
@@ -98,26 +111,26 @@ export function EntityForm({
       }}
     >
       <form onSubmit={submit} className="modal-form">
-        {kind !== 'member' ? (
+        {kind !== "member" ? (
           <label>
-            {kind === 'profile'
-              ? 'Adın'
-              : kind === 'project'
-                ? 'Proje adı'
-                : 'Çalışma alanının adı'}
+            {kind === "profile"
+              ? "Adın"
+              : kind === "project"
+                ? "Proje adı"
+                : "Çalışma alanının adı"}
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
               minLength={2}
-              maxLength={kind === 'profile' ? 50 : 100}
+              maxLength={kind === "profile" ? 50 : 100}
               required
               placeholder={
-                kind === 'workspace'
-                  ? 'Örn. Tasarım ekibi'
-                  : kind === 'project'
-                    ? 'Örn. Yeni web sitesi'
-                    : 'Ad Soyad'
+                kind === "workspace"
+                  ? "Örn. Tasarım ekibi"
+                  : kind === "project"
+                    ? "Örn. Yeni web sitesi"
+                    : "Ad Soyad"
               }
             />
           </label>
@@ -135,6 +148,7 @@ export function EntityForm({
                 placeholder="arkadasin@ekibin.com"
               />
             </label>
+
             <label>
               Rol
               <select
@@ -142,12 +156,13 @@ export function EntityForm({
                 onChange={(e) => setMemberRole(e.target.value)}
               >
                 <option value="MEMBER">Üye</option>
-                {role === 'OWNER' && <option value="ADMIN">Yönetici</option>}
+                {role === "OWNER" && <option value="ADMIN">Yönetici</option>}
               </select>
             </label>
           </>
         )}
-        {kind === 'project' && (
+
+        {kind === "project" && (
           <>
             <label>
               Açıklama <span className="optional">isteğe bağlı</span>
@@ -159,12 +174,13 @@ export function EntityForm({
                 placeholder="Bu projeyle neyi başarmak istiyorsunuz?"
               />
             </label>
+
             <label>
               Proje durumu
               <select
                 value={status}
                 onChange={(e) =>
-                  setStatus(e.target.value as 'ACTIVE' | 'ARCHIVED')
+                  setStatus(e.target.value as "ACTIVE" | "ARCHIVED")
                 }
               >
                 <option value="ACTIVE">Aktif</option>
@@ -173,14 +189,17 @@ export function EntityForm({
             </label>
           </>
         )}
-        {kind === 'profile' && (
+
+        {kind === "profile" && (
           <label>
             E-posta
             <input value={user.email} readOnly />
             <small>E-posta adresi bu uygulamada değiştirilemiyor.</small>
           </label>
         )}
+
         {error && <ErrorBox message={error} />}
+
         <footer className="form-footer">
           <button
             className="button"
@@ -190,12 +209,13 @@ export function EntityForm({
           >
             Vazgeç
           </button>
+
           <SaveButton busy={busy}>
-            {kind === 'member'
-              ? 'Üye ekle'
-              : kind === 'profile' || project
-                ? 'Kaydet'
-                : 'Oluştur'}
+            {kind === "member"
+              ? "Üye ekle"
+              : kind === "profile" || project
+                ? "Kaydet"
+                : "Oluştur"}
           </SaveButton>
         </footer>
       </form>
