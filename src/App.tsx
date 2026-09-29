@@ -3,6 +3,8 @@ import {
   ArrowDownWideNarrow,
   ArrowRight,
   ArrowUpRight,
+  Archive,
+  BarChart3,
   CalendarDays,
   Check,
   CheckCheck,
@@ -16,11 +18,13 @@ import {
   LogOut,
   Menu,
   MoreHorizontal,
+  Palette,
   Plus,
   Search,
   Settings2,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -38,7 +42,42 @@ import {
 import { EntityForm } from "./Forms";
 import type { FormKind } from "./Forms";
 import { TaskDialog } from "./TaskDialog";
+
+type Theme = "light" | "dark" | "ocean" | "sunset" | "lavender";
+const themeNames: Record<Theme, string> = {
+  light: "Aydınlık",
+  dark: "Karanlık",
+  ocean: "Okyanus",
+  sunset: "Gün batımı",
+  lavender: "Lavanta",
+};
+
+function readTheme(): Theme {
+  try {
+    const value = window.localStorage?.getItem?.("taskflow.theme");
+    return value && value in themeNames ? (value as Theme) : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function saveTheme(theme: Theme) {
+  try {
+    if (typeof window.localStorage?.setItem === "function") {
+      window.localStorage.setItem("taskflow.theme", theme);
+    }
+  } catch {
+    // The theme still works when browser storage is unavailable.
+  }
+}
+import { CalendarView } from "./CalendarView";
+import { calendarRange } from "./calendar";
+import { DashboardPanel } from "./DashboardPanel";
+import { NotificationCenter } from "./NotificationCenter";
+import { LifecyclePanel } from "./LifecyclePanel";
+import { GlobalSearch } from "./GlobalSearch";
 import type {
+  CalendarTask,
   Member,
   Priority,
   Project,
@@ -118,8 +157,14 @@ function Dashboard({
   const [projectId, setProjectId] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [view, setView] = useState<"board" | "members" | "settings">("board");
-  const [layout, setLayout] = useState<"board" | "list">("board");
+  const [calendarTasks, setCalendarTasks] = useState<CalendarTask[]>([]);
+  const [view, setView] = useState<
+    "board" | "dashboard" | "archive" | "trash" | "members" | "settings"
+  >("board");
+  const [layout, setLayout] = useState<"board" | "list" | "calendar">("board");
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarError, setCalendarError] = useState("");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [priority, setPriority] = useState("");
@@ -153,6 +198,7 @@ function Dashboard({
     action: () => Promise<void>;
   } | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
+  const [theme, setTheme] = useState<Theme>(readTheme);
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const project = projects.find((p) => p.id === projectId);
   const membership = members.find((m) => m.userId === user.id);
@@ -164,6 +210,25 @@ function Dashboard({
     const timer = setTimeout(() => setToast(""), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
+  useEffect(() => {
+    document.body.classList.remove(
+      ...Object.keys(themeNames).map((name) => `theme-${name}`),
+    );
+    document.body.classList.add(`theme-${theme}`);
+    saveTheme(theme);
+  }, [theme]);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("invite");
+    if (!token) return;
+    api<Workspace>(`/workspaces/invitations/${token}/accept`, { method: "POST" })
+      .then((accepted) => {
+        window.history.replaceState({}, "", window.location.pathname);
+        setWorkspaceVersion((value) => value + 1);
+        setWorkspaceId(accepted.id);
+        notice("Çalışma alanı daveti kabul edildi.");
+      })
+      .catch((reason) => setActionError(reason.message));
+  }, [notice]);
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
@@ -258,6 +323,44 @@ function Dashboard({
     sort,
     user.id,
   ]);
+  useEffect(() => {
+    setCalendarTasks([]);
+    setCalendarError("");
+    if (layout !== "calendar" || !projectId || scopeLoading) return;
+    const controller = new AbortController();
+    const range = calendarRange(calendarMonth);
+    const query = new URLSearchParams({
+      from: range.from.toISOString(),
+      to: range.to.toISOString(),
+    });
+    if (debouncedSearch.trim()) query.set("search", debouncedSearch.trim());
+    if (priority) query.set("priority", priority);
+    if (status) query.set("status", status);
+    if (mine) query.set("assigneeId", user.id);
+    setCalendarLoading(true);
+    api<CalendarTask[]>(`/projects/${projectId}/calendar?${query}`, {
+      signal: controller.signal,
+    })
+      .then(setCalendarTasks)
+      .catch((e) => {
+        if (e.name !== "AbortError") setCalendarError(e.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCalendarLoading(false);
+      });
+    return () => controller.abort();
+  }, [
+    layout,
+    projectId,
+    scopeLoading,
+    calendarMonth,
+    taskVersion,
+    debouncedSearch,
+    priority,
+    status,
+    mine,
+    user.id,
+  ]);
   function chooseWorkspace(id: string) {
     setWorkspaceId(id);
     setProjectId("");
@@ -293,6 +396,37 @@ function Dashboard({
       setActionError((e as Error).message);
     } finally {
       setLogoutBusy(false);
+    }
+  }
+  async function openNotificationTask(
+    taskId: string,
+    targetProjectId: string,
+    targetWorkspaceId: string,
+  ) {
+    setActionError("");
+    try {
+      const selected = await api<Task>(`/tasks/${taskId}`);
+      setWorkspaceId(targetWorkspaceId);
+      setProjectId(targetProjectId);
+      setView("board");
+      setTaskDialog({ task: selected });
+    } catch (e) {
+      setActionError((e as Error).message);
+    }
+  }
+  async function rescheduleTask(task: CalendarTask, date: Date) {
+    setActionError("");
+    const due = new Date(date);
+    due.setHours(23, 59, 59, 0);
+    try {
+      await api<Task>(`/tasks/${task.id}`, {
+        method: "PATCH",
+        body: { dueDate: due.toISOString(), expectedUpdatedAt: task.updatedAt },
+      });
+      setTaskVersion((value) => value + 1);
+      notice("Görevin tarihi güncellendi.");
+    } catch (e) {
+      setActionError((e as Error).message);
     }
   }
   function savedEntity(result: Workspace | Project | User) {
@@ -410,6 +544,22 @@ function Dashboard({
             <LayoutGrid size={17} /> Görev panosu <ChevronRight size={14} />
           </button>
           <button
+            className={view === "dashboard" ? "active" : ""}
+            disabled={!workspace}
+            onClick={() => {
+              setView("dashboard");
+              setMobileOpen(false);
+            }}
+          >
+            <BarChart3 size={17} /> Raporlar
+          </button>
+          <button className={view === "archive" ? "active" : ""} disabled={!workspace} onClick={() => { setView("archive"); setMobileOpen(false); }}>
+            <Archive size={17} /> Arşiv
+          </button>
+          <button className={view === "trash" ? "active" : ""} disabled={!workspace} onClick={() => { setView("trash"); setMobileOpen(false); }}>
+            <Trash2 size={17} /> Çöp kutusu
+          </button>
+          <button
             className={view === "members" ? "active" : ""}
             disabled={!workspace}
             onClick={() => {
@@ -517,12 +667,46 @@ function Dashboard({
             <strong>
               {view === "members"
                 ? "Ekip üyeleri"
+                : view === "dashboard"
+                  ? "Raporlar"
+                : view === "archive"
+                  ? "Arşiv"
+                : view === "trash"
+                  ? "Çöp kutusu"
                 : view === "settings"
                   ? "Alan ayarları"
                   : project?.name || "Projeler"}
             </strong>
           </div>
           <div className="topbar-right">
+            {workspace && (
+              <GlobalSearch
+                workspaceId={workspace.id}
+                onTask={(taskId, targetProjectId) =>
+                  openNotificationTask(taskId, targetProjectId, workspace.id)
+                }
+                onProject={chooseProject}
+                onMembers={() => setView("members")}
+              />
+            )}
+            <label className="theme-picker" title="Renk teması">
+              <Palette size={16} />
+              <select
+                aria-label="Renk teması"
+                value={theme}
+                onChange={(event) => setTheme(event.target.value as Theme)}
+              >
+                {(Object.keys(themeNames) as Theme[]).map((value) => (
+                  <option key={value} value={value}>
+                    {themeNames[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <NotificationCenter
+              refreshKey={taskVersion}
+              onTask={openNotificationTask}
+            />
             <span className="today">
               <CalendarDays size={14} />
               {new Date().toLocaleDateString("tr-TR", {
@@ -595,6 +779,14 @@ function Dashboard({
             <ErrorBox
               message={scopeError}
               retry={() => setScopeVersion((n) => n + 1)}
+            />
+          ) : view === "dashboard" ? (
+            <DashboardPanel workspaceId={workspace.id} />
+          ) : view === "archive" || view === "trash" ? (
+            <LifecyclePanel
+              workspaceId={workspace.id}
+              kind={view}
+              onChanged={() => setTaskVersion((value) => value + 1)}
             />
           ) : view === "members" ? (
             <>
@@ -870,6 +1062,12 @@ function Dashboard({
                   >
                     <List size={17} /> Liste
                   </button>
+                  <button
+                    className={layout === "calendar" ? "selected" : ""}
+                    onClick={() => setLayout("calendar")}
+                  >
+                    <CalendarDays size={17} /> Takvim
+                  </button>
                 </div>
                 <div className="team-preview">
                   <div className="avatar-stack">
@@ -918,7 +1116,7 @@ function Dashboard({
                   >
                     <SlidersHorizontal size={15} /> Filtrele
                   </button>
-                  <label className="sort-select">
+                  {layout !== "calendar" && <label className="sort-select">
                     <ArrowDownWideNarrow size={16} />
                     <select
                       aria-label="Görevleri sırala"
@@ -929,7 +1127,7 @@ function Dashboard({
                       <option value="dueDate">Son tarih</option>
                       <option value="title">Başlık A–Z</option>
                     </select>
-                  </label>
+                  </label>}
                 </div>
               </div>
               {filters && (
@@ -969,7 +1167,24 @@ function Dashboard({
                   )}
                 </div>
               )}
-              {tasksLoading ? (
+              {layout === "calendar" ? (
+                calendarLoading ? (
+                  <Spinner label="Takvim yükleniyor…" />
+                ) : calendarError ? (
+                  <ErrorBox
+                    message={calendarError}
+                    retry={() => setTaskVersion((n) => n + 1)}
+                  />
+                ) : (
+                  <CalendarView
+                    month={calendarMonth}
+                    tasks={calendarTasks}
+                    onMonthChange={setCalendarMonth}
+                    onTask={(task) => setTaskDialog({ task })}
+                    onReschedule={rescheduleTask}
+                  />
+                )
+              ) : tasksLoading ? (
                 <Spinner label="Görevler yükleniyor…" />
               ) : taskError ? (
                 <ErrorBox
@@ -1119,11 +1334,12 @@ function Dashboard({
           onSaved={savedEntity}
         />
       )}
-      {taskDialog && project && (
+      {taskDialog && project && workspace && (
         <TaskDialog
           task={taskDialog.task}
           defaultStatus={taskDialog.status}
           projectId={project.id}
+          workspaceId={workspace.id}
           members={members}
           user={user}
           role={role}
@@ -1235,6 +1451,15 @@ function TaskCard({
         <PriorityBadge priority={task.priority} />
       </div>
       <h3>{task.title}</h3>
+      {!!task.labels?.length && (
+        <div className="task-card-labels">
+          {task.labels.slice(0, 3).map(({ label }) => (
+            <span key={label.id} style={{ borderColor: label.color }}>
+              <i style={{ background: label.color }} /> {label.name}
+            </span>
+          ))}
+        </div>
+      )}
       {task.description && <p>{task.description}</p>}
       <div className="task-card-bottom">
         <span className={overdue ? "overdue" : ""}>

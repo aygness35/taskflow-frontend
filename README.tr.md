@@ -57,6 +57,15 @@ Değişiklikten sonra frontend geliştirme sunucusunu yeniden başlat. Backend�
 6. **Görevleri takip et.** Pano veya liste görünümünü kullan. Arama, durum, öncelik ve sana atanan görevler filtresiyle listeyi daraltabilir; sıralamayı değiştirebilirsin.
 7. **Yorum ekle.** Kaydedilmiş bir görevin detayını açarak ekip konuşmasına not yazabilirsin.
 8. **Ekibini yönet.** Yetkin varsa üyeler bölümünden kayıtlı bir kullanıcının e-posta adresiyle çalışma alanına üye ekleyebilirsin. Yönetim seçenekleri çalışma alanındaki rolüne göre değişir.
+9. **Takvimi kullan.** Son tarihli görevleri aylık görünümde izle ve kartları günler arasında sürükleyerek tarihlerini değiştir.
+10. **Görev ayrıntılarını zenginleştir.** Etiket, kontrol listesi ve dosya ekle; aktivite geçmişinden değişiklikleri izle.
+11. **Bildirimleri ve raporları takip et.** Atama ve yorum bildirimlerini üst menüden, ekip ilerlemesini Raporlar ekranından görüntüle.
+12. **İş akışını düzenle.** Alt görevler oluştur, görevleri günlük, haftalık veya aylık tekrar edecek şekilde ayarla ve tamamlanan işleri arşivle.
+13. **Verileri yönet.** Arşiv ve çöp kutusundan görevleri geri yükle, çalışma alanını CSV olarak dışa aktar ve karanlık temayı üst menüden aç.
+14. **Ekibi davet et.** E-posta davet bağlantısını kopyala veya e-posta uygulamanda aç; bağlantı 7 gün geçerlidir.
+15. **Her yerde ara.** Üst menüdeki arama düğmesiyle seçili çalışma alanındaki proje, görev, yorum ve ekip üyelerini birlikte ara.
+16. **Temanı seç.** Üst menüden Aydınlık, Karanlık, Okyanus, Gün batımı veya Lavanta temasını seç; tercih tarayıcıda saklanır.
+17. **Hatırlatmaları takip et.** Son tarihi yaklaşan ve geciken görev bildirimlerini bildirim merkezinden aç.
 
 İlk deneme için bir çalışma alanı, bir proje ve bir görev oluştur; ardından görevin durumunu değiştirip yorum ekleyerek temel akışı incele.
 

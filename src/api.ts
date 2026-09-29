@@ -78,14 +78,19 @@ async function send(
   accessToken?: string,
 ) {
   try {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     return await fetch(`${API_URL}${path}`, {
       method,
       signal,
       headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !isForm
+          ? { 'Content-Type': 'application/json' }
+          : {}),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined
+        ? { body: isForm ? body : JSON.stringify(body) }
+        : {}),
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError')
@@ -95,6 +100,17 @@ async function send(
       0,
     );
   }
+}
+
+export async function downloadBlob(path: string): Promise<Blob> {
+  const usedToken = tokens?.accessToken;
+  let res = await send(path, 'GET', undefined, undefined, usedToken);
+  if (res.status === 401 && tokens) {
+    if (tokens.accessToken === usedToken) await refreshSession();
+    res = await send(path, 'GET', undefined, undefined, tokens?.accessToken);
+  }
+  if (!res.ok) throw await responseError(res);
+  return res.blob();
 }
 async function refreshSession() {
   if (!refreshing) {

@@ -1,6 +1,7 @@
 export type Role = "OWNER" | "ADMIN" | "MEMBER";
 export type Status = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type Recurrence = "DAILY" | "WEEKLY" | "MONTHLY";
 
 export interface User {
   id: string;
@@ -43,6 +44,84 @@ export interface Task {
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
+  labels?: { label: Label }[];
+  archivedAt?: string | null;
+  deletedAt?: string | null;
+  recurrence?: Recurrence | null;
+  recurrenceEnd?: string | null;
+  parentId?: string | null;
+  subtasks?: Task[];
+}
+
+export interface CalendarTask extends Task {
+  assignee: Pick<User, "id" | "name" | "email"> | null;
+}
+
+export interface Label {
+  id: string;
+  workspaceId: string;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  taskId: string;
+  title: string;
+  completed: boolean;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Attachment {
+  id: string;
+  taskId: string;
+  uploaderId: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+  uploader?: Pick<User, "id" | "name" | "email">;
+}
+
+export interface Activity {
+  id: string;
+  taskId: string | null;
+  actorId: string;
+  action: string;
+  details: string | null;
+  createdAt: string;
+  actor: Pick<User, "id" | "name" | "email">;
+}
+
+export interface Notification {
+  id: string;
+  taskId: string | null;
+  type: string;
+  title: string;
+  message: string;
+  readAt: string | null;
+  createdAt: string;
+  task:
+    | (Pick<Task, "id" | "title" | "projectId"> & {
+        project: { workspaceId: string };
+      })
+    | null;
+}
+
+export interface DashboardStats {
+  total: number;
+  overdue: number;
+  unassigned: number;
+  byStatus: Partial<Record<Status, number>>;
+  byPriority: Partial<Record<Priority, number>>;
+  byAssignee: {
+    user: Pick<User, "id" | "name" | "email">;
+    total: number;
+    completed: number;
+  }[];
 }
 
 export interface Comment {

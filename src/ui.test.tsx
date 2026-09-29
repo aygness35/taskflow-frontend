@@ -12,7 +12,7 @@ import { App } from './App';
 import { Auth } from './Auth';
 import { TaskDialog } from './TaskDialog';
 import { saveSession } from './api';
-import type { Member, Task } from './types';
+import type { CalendarTask, Member, Task } from './types';
 
 const fetchMock = vi.fn();
 const user = { id: 'user-1', name: 'Test User', email: 'test@example.com' };
@@ -130,6 +130,20 @@ describe('Frontend user flows', () => {
       if (path.endsWith('/projects'))
         return json({ data: [project], meta: { totalPages: 1 } });
       if (path.endsWith('/members')) return json([member]);
+      if (path.endsWith('/search'))
+        return json({
+          total: 1,
+          projects: [],
+          comments: [],
+          members: [],
+          tasks: [
+            {
+              ...task,
+              title: 'Global result',
+              project: { name: project.name },
+            },
+          ],
+        });
       if (path.endsWith('/tasks') && init.method === 'POST') {
         const created = { ...task, ...JSON.parse(init.body as string) };
         taskList.push(created);
@@ -141,6 +155,14 @@ describe('Frontend user flows', () => {
     });
     render(<App />);
     await screen.findByRole('heading', { name: 'Website.' });
+    await userEvent.selectOptions(screen.getByLabelText('Renk teması'), 'ocean');
+    expect(document.body.classList.contains('theme-ocean')).toBe(true);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Çalışma alanında ara' }),
+    );
+    await userEvent.type(screen.getByLabelText('Global arama'), 'Global');
+    await screen.findByText('Global result');
+    await userEvent.click(screen.getByRole('button', { name: 'Aramayı kapat' }));
     await userEvent.click(screen.getByRole('button', { name: 'Yeni görev' }));
     const dialog = screen.getByRole('dialog');
     await userEvent.type(
@@ -167,6 +189,46 @@ describe('Frontend user flows', () => {
     ).toBeTruthy();
   });
 
+  it('loads assigned tasks into the calendar view', async () => {
+    saveSession({ accessToken: 'access', refreshToken: 'refresh' });
+    const now = new Date();
+    const calendarTask: CalendarTask = {
+      ...task,
+      title: 'Calendar assignment',
+      assigneeId: user.id,
+      assignee: user,
+      dueDate: new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        15,
+        12,
+      ).toISOString(),
+    };
+    fetchMock.mockImplementation(async (url: string) => {
+      const path = new URL(url).pathname;
+      if (path === '/auth/me') return json(user);
+      if (path === '/workspaces') return json([workspace]);
+      if (path.endsWith('/projects'))
+        return json({ data: [project], meta: { totalPages: 1 } });
+      if (path.endsWith('/members')) return json([member]);
+      if (path.endsWith('/calendar')) return json([calendarTask]);
+      if (path.endsWith('/tasks'))
+        return json({ data: [], meta: { totalPages: 1 } });
+      throw new Error(`Unexpected request ${path}`);
+    });
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Website.' });
+    await userEvent.click(screen.getByRole('button', { name: 'Takvim' }));
+    expect(await screen.findByText('Calendar assignment')).toBeTruthy();
+    const calendarRequest = fetchMock.mock.calls.find(([url]) =>
+      new URL(url).pathname.endsWith('/calendar'),
+    );
+    expect(calendarRequest).toBeTruthy();
+    const query = new URL(calendarRequest![0]).searchParams;
+    expect(query.has('from')).toBe(true);
+    expect(query.has('to')).toBe(true);
+  });
+
   it('hides task deletion for a noncreator member and preserves the exact unchanged deadline', async () => {
     fetchMock.mockImplementation(async (url: string) =>
       url.endsWith('/tasks/task-1')
@@ -178,6 +240,7 @@ describe('Frontend user flows', () => {
       <TaskDialog
         task={{ ...task, createdById: 'other-user' }}
         projectId={project.id}
+        workspaceId={workspace.id}
         user={user}
         members={[member]}
         role="MEMBER"
@@ -215,6 +278,7 @@ describe('Frontend user flows', () => {
       <TaskDialog
         task={task}
         projectId={project.id}
+        workspaceId={workspace.id}
         user={user}
         members={[member]}
         role="OWNER"

@@ -36,6 +36,7 @@ export function EntityForm({
   const [memberRole, setMemberRole] = useState("MEMBER");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [inviteUrl, setInviteUrl] = useState("");
 
   const titles = {
     workspace: "Yeni çalışma alanı",
@@ -71,7 +72,7 @@ export function EntityForm({
             }
           : kind === "member"
             ? {
-                path: `/workspaces/${workspace!.id}/members`,
+                path: `/workspaces/${workspace!.id}/invitations`,
                 method: "POST",
                 body: { email, role: memberRole },
               }
@@ -82,13 +83,18 @@ export function EntityForm({
               };
 
     try {
-      const result = await api<Workspace | Project | User>(
+      const result = await api<
+        Workspace | Project | User | { token: string }
+      >(
         request.path,
         request,
       );
-
-      onSaved(result);
-      onClose();
+      if (kind === "member" && "token" in result) {
+        setInviteUrl(`${window.location.origin}/?invite=${result.token}`);
+      } else {
+        onSaved(result as Workspace | Project | User);
+        onClose();
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -101,7 +107,7 @@ export function EntityForm({
       title={titles[kind]}
       subtitle={
         kind === "member"
-          ? "Eklemek istediğin kişinin TaskFlow hesabı olmalı."
+          ? "Yedi gün geçerli bir davet bağlantısı oluştur."
           : kind === "workspace"
             ? "Ekibin ve fikirlerin için yeni bir yer."
             : undefined
@@ -110,7 +116,17 @@ export function EntityForm({
         if (!busy) onClose();
       }}
     >
-      <form onSubmit={submit} className="modal-form">
+      {inviteUrl ? (
+        <div className="modal-form invite-result">
+          <p>Davet hazır. Bağlantıyı e-postayla gönder veya kopyala.</p>
+          <input aria-label="Davet bağlantısı" value={inviteUrl} readOnly />
+          <div className="form-footer">
+            <button className="button" onClick={() => navigator.clipboard.writeText(inviteUrl)}>Bağlantıyı kopyala</button>
+            <a className="button primary" href={`mailto:${email}?subject=${encodeURIComponent("TaskFlow çalışma alanı daveti")}&body=${encodeURIComponent(`TaskFlow davetin: ${inviteUrl}`)}`}>E-posta gönder</a>
+            <button className="button" onClick={onClose}>Kapat</button>
+          </div>
+        </div>
+      ) : <form onSubmit={submit} className="modal-form">
         {kind !== "member" ? (
           <label>
             {kind === "profile"
@@ -212,13 +228,13 @@ export function EntityForm({
 
           <SaveButton busy={busy}>
             {kind === "member"
-              ? "Üye ekle"
+              ? "Davet oluştur"
               : kind === "profile" || project
                 ? "Kaydet"
                 : "Oluştur"}
           </SaveButton>
         </footer>
-      </form>
+      </form>}
     </Modal>
   );
 }
